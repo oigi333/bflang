@@ -95,12 +95,43 @@ impl DebugCmd {
 }
 
 impl Command {
+
     pub fn to_repr(&self) -> String {
         todo!()
     }
 
     pub fn to_brainfuck(&self) -> String {
-        todo!()
+        let mut s = String::new();
+        self.append_brainfuck(&mut s);
+        s
+    }
+
+    fn append_brainfuck(&self, s: &mut String) {
+        use std::iter::repeat;
+
+        match self {
+            Command::Add(i) => {
+                let c = if *i > 0 { '+' } else { '-' };
+                s.extend(repeat(c).take(i.abs() as usize))
+            }
+            Command::Move(i) => {
+                let c = if *i > 0 { '>' } else { '<' };
+                s.extend(repeat(c).take(i.abs() as usize))
+            }
+            Command::Loop(body) => {
+                s.push('[');
+                body.append_brainfuck(s);
+                s.push(']');
+            }
+            Command::Seq(commands) => {
+                for command in commands {
+                    command.append_brainfuck(s)
+                }
+            }
+            Command::Debug(_) => {}
+            Command::Print => s.push('.'),
+            Command::Read => s.push(',')
+        }
     }
 
     pub fn run(&self, input: &[u32]) -> Vec<u32>{
